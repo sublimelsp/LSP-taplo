@@ -1,0 +1,26 @@
+[
+	{
+		"caption": "Edit: Copy as JSON",
+		"command": "taplo_copy_as_json",
+	},
+	{
+		"caption": "Edit: Paste as JSON",
+		"command": "taplo_paste_as_json",
+	},
+	{
+		"caption": "Edit: Paste as TOML",
+		"command": "taplo_paste_as_toml",
+	},
+	{
+		"caption": "Taplo: Select schema for TOML",
+		"command": "taplo_assign_schema",
+	},
+	{
+		"caption": "Preferences: LSP-taplo Settings",
+		"command": "edit_settings",
+		"args": {
+			"base_file": "${packages}/LSP-taplo/LSP-taplo.sublime-settings",
+			"default": "// Settings in here override those in \"LSP-taplo/LSP-taplo.sublime-settings\"\n\n{\n\t$0\n}\n"
+		}
+	},
+]

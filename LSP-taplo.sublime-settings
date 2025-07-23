@@ -1,0 +1,61 @@
+{
+	// The command to start the langauge server.
+	"command": ["$server_file", "lsp", "stdio", "--colors", "never"],
+
+	"env": {
+		// Logging configuration
+		//   Valid values are: "trace", "debug", "info", "warn", "error"
+		"RUST_LOG": "warn",
+		// Configuration file
+		// "TAPLO_CONFIG": "$packages_path/User/taplo.toml",
+		// Extra root certificates for TLS connections made by tablo.
+		// "TAPLO_EXTRA_CA_CERTS": "$packages_path/User/custom-ca.pem",
+	},
+
+	// The sever version to install. Valid values are fixed versions like `0.19.0` or `latest`.
+	"server_version": "latest",
+
+	// base scope selectors to attach to
+	"selector": "source.toml",
+
+	// type of buffers to attach to
+	"schemes": ["file", "buffer", "res"],
+
+	"initializationOptions": {
+		"configurationSection": "evenBetterToml",
+		"cachePath": "$server_path/cache",
+	},
+
+	"settings": {
+		// "evenBetterToml.schema.enabled": true,
+		// "evenBetterToml.schema.links": false,
+		// "evenBetterToml.schema.catalogs": [
+		// 	"https://www.schemastore.org/api/json/catalog.json"
+		// ],
+		// "evenBetterToml.schema.associations": {},
+		// "evenBetterToml.schema.cache.memoryExpiration": 60,
+		// "evenBetterToml.schema.cache.diskExpiration": 600,
+		// "evenBetterToml.completion.maxKeys": 5,
+		// "evenBetterToml.syntax.semanticTokens": false,
+		// "evenBetterToml.formatter.alignEntries": null,
+		// "evenBetterToml.formatter.alignComments": null,
+		// "evenBetterToml.formatter.arrayTrailingComma": null,
+		// "evenBetterToml.formatter.arrayAutoExpand": null,
+		// "evenBetterToml.formatter.inlineTableExpand": null,
+		// "evenBetterToml.formatter.arrayAutoCollapse": null,
+		// "evenBetterToml.formatter.compactArrays": null,
+		// "evenBetterToml.formatter.compactInlineTables": null,
+		// "evenBetterToml.formatter.compactEntries": null,
+		// "evenBetterToml.formatter.columnWidth": null,
+		// "evenBetterToml.formatter.indentTables": null,
+		// "evenBetterToml.formatter.indentEntries": null,
+		// "evenBetterToml.formatter.indentString": null,
+		// "evenBetterToml.formatter.trailingNewline": null,
+		// "evenBetterToml.formatter.reorderKeys": null,
+		// "evenBetterToml.formatter.reorderArrays": null,
+		// "evenBetterToml.formatter.reorderInlineTables": null,
+		// "evenBetterToml.formatter.allowedBlankLines": null,
+		// "evenBetterToml.formatter.crlf": null,
+		// "evenBetterToml.rules": [],
+	}
+}

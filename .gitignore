@@ -1,0 +1,11 @@
+# python
+__pycache__/
+.mypy_cache/
+.ropeproject/
+.venv/
+*.pyc
+
+# sublime text
+.sublime/
+*.sublime-project
+*.sublime-workspace

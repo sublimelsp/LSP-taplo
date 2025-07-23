@@ -1,0 +1,240 @@
+{
+	"contributions": {
+		"settings": [
+			{
+				"file_patterns": [
+					"/LSP-taplo.sublime-settings"
+				],
+				"schema": {
+					"$id": "sublime://settings/LSP-taplo",
+					"definitions": {
+						"PluginConfig": {
+							"properties": {
+								"initializationOptions": {
+									"type": "object",
+									"properties": {
+										"configurationSection": {
+											"description": "Settings Prefix",
+											"type": "string",
+											"default": "evenBetterToml"
+										},
+										"cachePath": {
+											"description": "Folder to cache downloaded JSON schemas in",
+											"type": "string",
+											"default": "$server_path/cache"
+										},
+										"settings": {
+											"$ref": "sublime://settings/LSP-taplo#/definitions/ServerSettings"
+										}
+									}
+								},
+								"settings": {
+									"$ref": "sublime://settings/LSP-taplo#/definitions/ServerSettings"
+								}
+							}
+						},
+						"ServerSettings": {
+							"type": "object",
+							"properties": {
+								"evenBetterToml.schema.enabled": {
+									"description": "Enable completion and validation based on JSON schemas.",
+									"type": "boolean",
+									"default": true
+								},
+								"evenBetterToml.schema.links": {
+									"description": "Whether to show clickable links for keys in the editor.",
+									"type": "boolean",
+									"default": false
+								},
+								"evenBetterToml.schema.catalogs": {
+									"description": "A list of URLs to schema catalogs where schemas and associations can be fetched from",
+									"type": "array",
+									"items": {
+										"type": "string"
+									},
+									"default": [
+										"https://www.schemastore.org/api/json/catalog.json"
+									]
+								},
+								"evenBetterToml.schema.associations": {
+									"description": "Document and schema associations.",
+									"markdownDescription": "Additional document and schema associations. \n\n The key must be a regular expression, this pattern is used to associate schemas with absolute document URIs. Overlapping patterns result in undefined behaviour and either matching schema can be used. \n\n The value must be an absolute URI to the JSON schema, for supported values and more information [read here](https://taplo.tamasfe.dev/configuration#visual-studio-code).",
+									"type": "object",
+									"default": {}
+								},
+								"evenBetterToml.schema.cache.memoryExpiration": {
+									"description": "The amount of seconds after which schemas will be invalidated from memory.",
+									"markdownDescription": "The amount of seconds after which schemas will be invalidated from memory. \n**NOTE**: setting too low values will cause performance issues and validation of some schemas will fail.",
+									"type": "integer",
+									"minimum": 0,
+									"default": 60
+								},
+								"evenBetterToml.schema.cache.diskExpiration": {
+									"description": "The amount of seconds after which cached catalogs and schemas expire and will be attempted to be fetched again.",
+									"type": "integer",
+									"minimum": 0,
+									"default": 600
+								},
+								"evenBetterToml.completion.maxKeys": {
+									"description": "The maximum amount of keys in a dotted key to display during completion, 0 effectively disables key completions.",
+									"type": "integer",
+									"minimum": 0,
+									"default": 5
+								},
+								"evenBetterToml.syntax.semanticTokens": {
+									"description": "Whether to enable semantic tokens for tables and arrays.",
+									"type": "boolean",
+									"default": true
+								},
+								"evenBetterToml.formatter.alignEntries": {
+									"type": "boolean",
+									"default": null,
+									"description": "Align entries vertically. Entries that have table headers, comments, or blank lines between them are not aligned."
+								},
+								"evenBetterToml.formatter.alignComments": {
+									"type": "boolean",
+									"default": null,
+									"description": "Align consecutive comments after entries and items vertically. This applies to comments that are after entries or array items"
+								},
+								"evenBetterToml.formatter.arrayTrailingComma": {
+									"type": "boolean",
+									"default": null,
+									"description": "Put trailing commas for multiline arrays."
+								},
+								"evenBetterToml.formatter.arrayAutoExpand": {
+									"type": "boolean",
+									"default": null,
+									"description": "Automatically expand arrays to multiple lines."
+								},
+								"evenBetterToml.formatter.inlineTableExpand": {
+									"type": "boolean",
+									"default": null,
+									"description": "Expand values inside in line tables."
+								},
+								"evenBetterToml.formatter.arrayAutoCollapse": {
+									"type": "boolean",
+									"default": null,
+									"description": "Automatically collapse arrays if they fit in one line."
+								},
+								"evenBetterToml.formatter.compactArrays": {
+									"type": "boolean",
+									"default": null,
+									"description": "Omit whitespace padding inside single-line arrays."
+								},
+								"evenBetterToml.formatter.compactInlineTables": {
+									"type": "boolean",
+									"default": null,
+									"description": "Omit whitespace padding inside inline tables."
+								},
+								"evenBetterToml.formatter.compactEntries": {
+									"type": "boolean",
+									"default": null,
+									"description": "Omit whitespace around `=`."
+								},
+								"evenBetterToml.formatter.columnWidth": {
+									"type": "number",
+									"default": null,
+									"description": "Target maximum column width after which arrays are expanded into new lines."
+								},
+								"evenBetterToml.formatter.indentTables": {
+									"type": "boolean",
+									"default": null,
+									"description": "Indent subtables if they come in order."
+								},
+								"evenBetterToml.formatter.indentEntries": {
+									"type": "boolean",
+									"default": null,
+									"description": "Indent entries under tables."
+								},
+								"evenBetterToml.formatter.indentString": {
+									"type": "string",
+									"default": null,
+									"description": "Indentation to use, should be tabs or spaces but technically could be anything."
+								},
+								"evenBetterToml.formatter.trailingNewline": {
+									"type": "boolean",
+									"default": null,
+									"description": "Add trailing newline to the source."
+								},
+								"evenBetterToml.formatter.reorderKeys": {
+									"type": "boolean",
+									"default": null,
+									"description": "Alphabetically reorder keys that are not separated by blank lines."
+								},
+								"evenBetterToml.formatter.reorderArrays": {
+									"type": "boolean",
+									"default": null,
+									"description": "Alphabetically reorder array values that are not separated by blank lines."
+								},
+								"evenBetterToml.formatter.reorderInlineTables": {
+									"type": "boolean",
+									"default": null,
+									"description": "Alphabetically reorder inline tables."
+								},
+								"evenBetterToml.formatter.allowedBlankLines": {
+									"type": "number",
+									"default": null,
+									"description": "The maximum amount of consecutive blank lines allowed."
+								},
+								"evenBetterToml.formatter.crlf": {
+									"type": "boolean",
+									"default": null,
+									"description": "Use CRLF line endings."
+								},
+								"evenBetterToml.rules": {
+									"type": "array",
+									"default": [],
+									"markdownDescription": "Array of Taplo rules in JSON format, see [Configuration File - Rules](https://taplo.tamasfe.dev/configuration/file.html#rules). The rules given here are appended to existing rules from config files, if any. There is no conversion done, all object keys must be snake_case, including formatting rules."
+								}
+							}
+						}
+					},
+					"allOf": [
+						{
+							"$ref": "sublime://settings/LSP-plugin-base"
+						},
+						{
+							"$ref": "sublime://settings/LSP-taplo#/definitions/PluginConfig"
+						}
+					]
+				}
+			},
+			{
+				"file_patterns": [
+					"/LSP.sublime-settings"
+				],
+				"schema": {
+					"properties": {
+						"clients": {
+							"properties": {
+								"LSP-taplo": {
+									"$ref": "sublime://settings/LSP-taplo#/definitions/PluginConfig"
+								}
+							}
+						}
+					}
+				}
+			},
+			{
+				"file_patterns": [
+					"/*.sublime-project"
+				],
+				"schema": {
+					"properties": {
+						"settings": {
+							"properties": {
+								"LSP": {
+									"properties": {
+										"LSP-taplo": {
+											"$ref": "sublime://settings/LSP-taplo#/definitions/PluginConfig"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		]
+	}
+}
