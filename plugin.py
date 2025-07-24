@@ -1,11 +1,12 @@
 from __future__ import annotations
+import contextlib
 import gzip
 import json
 import os
 import time
 
 from functools import partial
-from urllib.request import urlopen
+from urllib.request import urlopen, Request as HttpRequest
 
 import sublime
 
@@ -69,11 +70,12 @@ class TaploPlugin(AbstractPlugin):
             if int(time.time()) >= next_update_check:
                 try:
                     # response url ends with latest available version number
-                    url = "https://github.com/tamasfe/taplo/releases/latest"
-                    available_version = urlopen(url).url.rsplit("/", 1)[1]
-                    if available_version != server_version:
-                        cls.server_version = available_version
-                        return True
+                    request = HttpRequest(url=f"{cls.repo_url()}/releases/latest", method="HEAD")
+                    with contextlib.closing(urlopen(request)) as response:
+                        available_version = response.url.rstrip("/").rsplit("/", 1)[1]
+                        if available_version != server_version:
+                            cls.server_version = available_version
+                            return True
                 except BaseException:
                     cls.save_metadata(False, server_version)
 
@@ -88,11 +90,15 @@ class TaploPlugin(AbstractPlugin):
 
         os.makedirs(cls.server_path(), exist_ok=True)
 
-        # downlad and ungzip server binary (ignore any other files)
-        response = urlopen(cls.make_url(cls.server_version))
+        # streaming downlad and ungzip server binary
         server_file = cls.server_file()
-        with gzip.GzipFile(fileobj=response) as arc, open(server_file, "wb") as out:
-            out.write(arc.read())
+        with contextlib.closing(urlopen(cls.download_url(cls.server_version))) as response:
+            with gzip.GzipFile(fileobj=response) as arc, open(server_file, "wb") as out:
+                while True:
+                    block = arc.read(5 * 1024 * 1024)
+                    if not block:
+                        break
+                    out.write(block)
 
         os.chmod(server_file, 0o755)
 
@@ -143,9 +149,13 @@ class TaploPlugin(AbstractPlugin):
         except ImportError:
             pass  # Package Control is not required.
 
-    @staticmethod
-    def make_url(version: str) -> str:
-        asset = {
+    @classmethod
+    def repo_url(cls) -> str:
+        return "https://github.com/tamasfe/taplo"
+
+    @classmethod
+    def download_url(cls, version: str) -> str:
+        release_assets = {
             "linux-arm64": "taplo-linux-aarch64.gz",
             "linux-x32": "taplo-linux-x86.gz",
             "linux-x64": "taplo-linux-x86_64.gz",
@@ -154,8 +164,9 @@ class TaploPlugin(AbstractPlugin):
             "windows-arm64": "taplo-windows-aarch64.gz",
             "windows-x32": "taplo-windows-x86.gz",
             "windows-x64": "taplo-windows-x86_64.gz",
-        }[f"{sublime.platform()}-{sublime.arch()}"]
-        return f"https://github.com/tamasfe/taplo/releases/download/{version}/{asset}"
+        }
+        asset = release_assets[f"{sublime.platform()}-{sublime.arch()}"]
+        return f"{cls.repo_url()}/releases/download/{version}/{asset}"
 
     @classmethod
     def server_file(cls) -> str:
