@@ -5,7 +5,6 @@ import os
 import time
 
 from functools import partial
-from typing import cast
 from urllib.request import urlopen
 
 import sublime
@@ -112,7 +111,7 @@ class TaploPlugin(AbstractPlugin):
         variables = extract_variables(window)
         variables.update(cls.additional_variables())
         cache_path = os.path.normpath(configuration.init_options.get("cachePath"))
-        cache_path = cast(str, sublime.expand_variables(cache_path, variables))
+        cache_path = str(sublime.expand_variables(cache_path, variables))
         os.makedirs(cache_path, exist_ok=True)
 
     @classmethod
