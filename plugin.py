@@ -40,8 +40,6 @@ __all__ = [
 class TaploPlugin(AbstractPlugin):
     package_name: str = __spec__.parent
     server_version: str = ""
-    settings_name: str = "LSP-taplo.sublime-settings"
-    _settings: sublime.Settings | None = None
 
     # LSP API methods
 
@@ -51,7 +49,11 @@ class TaploPlugin(AbstractPlugin):
 
     @classmethod
     def configuration(cls):
-        return (cls.settings(), f"Packages/{cls.package_name}/{cls.settings_name}")
+        settings_file_name = "LSP-taplo.sublime-settings"
+        return (
+            sublime.load_settings(settings_file_name),
+            f"Packages/{cls.package_name}/{settings_file_name}",
+        )
 
     @classmethod
     def needs_update_or_installation(cls):
@@ -62,7 +64,8 @@ class TaploPlugin(AbstractPlugin):
         else:
             next_update_check, server_version = 0, ""
 
-        cls.server_version = cast(str, cls.settings().get("server_version", "latest"))
+        settings, _ = cls.configuration()
+        cls.server_version = str(settings.get("server_version", "latest"))
         if cls.server_version == "latest":
             if int(time.time()) >= next_update_check:
                 try:
@@ -154,12 +157,6 @@ class TaploPlugin(AbstractPlugin):
             "windows-x64": "taplo-windows-x86_64.gz",
         }[f"{sublime.platform()}-{sublime.arch()}"]
         return f"https://github.com/tamasfe/taplo/releases/download/{version}/{asset}"
-
-    @classmethod
-    def settings(cls) -> sublime.Settings:
-        if cls._settings is None:
-            cls._settings = sublime.load_settings(cls.settings_name)
-        return cls._settings
 
     @classmethod
     def server_file(cls) -> str:
