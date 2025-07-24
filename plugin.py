@@ -204,7 +204,7 @@ class TaploAssignSchemaCommand(LspTextCommand):
 
     session_name = TaploPlugin.name()
 
-    def run(self, _: sublime.Edit):
+    def run(self, _: sublime.Edit) -> None:
         session = self.session_by_name()
         if session:
             session.send_request(
@@ -231,7 +231,7 @@ class TaploAssignSchemaCommand(LspTextCommand):
                 on_select=partial(self.apply, session, response["schemas"]),
             )
 
-    def apply(self, session: Session, schemas: dict, index: int) -> None:
+    def apply(self, session: Session, schemas: list[dict], index: int) -> None:
         if index >= 0:
             document_uri = uri_from_view(self.view)
             schema = schemas[index]
@@ -405,10 +405,10 @@ class TaploPasteAsTomlCommand(LspTextCommand):
         self.view.run_command("insert", {"characters": text})
 
 
-def plugin_loaded():
+def plugin_loaded() -> None:
     register_plugin(TaploPlugin)
 
 
-def plugin_unloaded():
+def plugin_unloaded() -> None:
     TaploPlugin.cleanup()
     unregister_plugin(TaploPlugin)
