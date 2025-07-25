@@ -39,9 +39,20 @@ __all__ = [
 
 class TaploPlugin(AbstractPlugin):
     package_name: str = __spec__.parent
-    server_version: str = ""
+    """
+    The package name on file system.
 
-    # LSP API methods
+    Main purpose is to provide python version acnostic package name for use
+    in path sensitive locations, to ensure plugin even works if user installs
+    package with different name.
+    """
+
+    server_version: str = ""
+    """
+    The language server version to use.
+    """
+
+    # ---- public API methods ----
 
     @classmethod
     def name(cls):
@@ -124,7 +135,7 @@ class TaploPlugin(AbstractPlugin):
     def additional_variables(cls) -> dict[str, str]:
         return {"server_file": cls.server_file(), "server_path": cls.server_path()}
 
-    # server specific methods
+    # ---- internal methods -----
 
     @classmethod
     def cleanup(cls):
