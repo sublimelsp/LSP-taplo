@@ -119,7 +119,7 @@ class TaploPlugin(AbstractPlugin):
         cls.save_metadata(True, cls.server_version)
 
     @classmethod
-    def on_pre_start(
+    def can_start(
         cls,
         window: sublime.Window,
         initiating_view: sublime.View,
@@ -132,6 +132,7 @@ class TaploPlugin(AbstractPlugin):
         cache_path = os.path.normpath(configuration.init_options.get("cachePath"))
         cache_path = str(sublime.expand_variables(cache_path, variables))
         os.makedirs(cache_path, exist_ok=True)
+        return super().can_start(window, initiating_view, workspace_folders, configuration)
 
     @classmethod
     def additional_variables(cls) -> dict[str, str]:
