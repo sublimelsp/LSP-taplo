@@ -82,13 +82,10 @@ class TaploPlugin(AbstractPlugin):
         if cls.server_version == "latest":
             if int(time.time()) >= next_update_check:
                 try:
-                    # response url ends with latest available version number
-                    request = HttpRequest(url=f"{cls.repo_url()}/releases/latest", method="HEAD")
-                    with contextlib.closing(urlopen(request)) as response:
-                        available_version = response.url.rstrip("/").rsplit("/", 1)[1]
-                        if available_version != server_version:
-                            cls.server_version = available_version
-                            return True
+                    available_version = cls.available_version()
+                    if available_version != server_version:
+                        cls.server_version = available_version
+                        return True
                 except BaseException:
                     cls.save_metadata(False, server_version)
 
@@ -139,6 +136,13 @@ class TaploPlugin(AbstractPlugin):
         return {"server_file": cls.server_file(), "server_path": cls.server_path()}
 
     # ---- internal methods -----
+
+    @classmethod
+    def available_version(cls):
+        # response url ends with latest available version number
+        request = HttpRequest(url=f"{cls.repo_url()}/releases/latest", method="HEAD")
+        with contextlib.closing(urlopen(request)) as response:
+            return response.url.rstrip("/").rsplit("/", 1)[1]
 
     @classmethod
     def cleanup(cls):
