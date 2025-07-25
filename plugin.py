@@ -142,26 +142,27 @@ class TaploPlugin(AbstractPlugin):
 
     @classmethod
     def cleanup(cls):
-        def run_async() -> None:
-            from shutil import rmtree
-
-            server_path = cls.server_path()
-            # Enable long path support on on Windows
-            # see: https://stackoverflow.com/a/14076169/4643765
-            # see: https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation
-            if sublime.platform() == "windows":
-                server_path = Rf"\\?\{server_path}"
-
-            if os.path.isdir(server_path):
-                rmtree(server_path, ignore_errors=True)
-
         try:
             from package_control import events  # type: ignore
 
             if events.remove(cls.package_name):
-                sublime.set_timeout_async(run_async, 1000)
+                sublime.set_timeout_async(cls.remove_server_path, 1000)
         except ImportError:
             pass  # Package Control is not required.
+
+    @classmethod
+    def remove_server_path(cls):
+        from shutil import rmtree
+
+        server_path = cls.server_path()
+        # Enable long path support on on Windows
+        # to avoid errors when cleaning up paths with more than 256 chars.
+        # see: https://stackoverflow.com/a/14076169/4643765
+        # see: https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation
+        if sublime.platform() == "windows":
+            server_path = Rf"\\?\{server_path}"
+
+        rmtree(server_path, ignore_errors=True)
 
     @classmethod
     def repo_url(cls) -> str:
