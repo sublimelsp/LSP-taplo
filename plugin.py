@@ -52,6 +52,11 @@ class TaploPlugin(AbstractPlugin):
     The language server version to use.
     """
 
+    settings: sublime.Settings
+    """
+    Package settings
+    """
+
     # ---- public API methods ----
 
     @classmethod
@@ -60,11 +65,9 @@ class TaploPlugin(AbstractPlugin):
 
     @classmethod
     def configuration(cls):
-        settings_file_name = "LSP-taplo.sublime-settings"
-        return (
-            sublime.load_settings(settings_file_name),
-            f"Packages/{cls.package_name}/{settings_file_name}",
-        )
+        settings_file_name = f"{cls.name()}.sublime-settings"
+        cls.settings = sublime.load_settings(settings_file_name)
+        return cls.settings, f"Packages/{cls.package_name}/{settings_file_name}"
 
     @classmethod
     def needs_update_or_installation(cls):
@@ -75,8 +78,7 @@ class TaploPlugin(AbstractPlugin):
         else:
             next_update_check, server_version = 0, ""
 
-        settings, _ = cls.configuration()
-        cls.server_version = str(settings.get("server_version", "latest"))
+        cls.server_version = str(cls.settings.get("server_version", "latest"))
         if cls.server_version == "latest":
             if int(time.time()) >= next_update_check:
                 try:
