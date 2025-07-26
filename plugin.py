@@ -253,8 +253,8 @@ class TaploAssignSchemaCommand(LspTextCommand):
                 items=[
                     sublime.QuickPanelItem(
                         trigger=schema["meta"]["name"],
-                        annotation=schema["meta"]["source"],
-                        details=schema["meta"]["description"],
+                        annotation=schema["meta"]["description"],
+                        details=schema["url"],
                     )
                     for schema in response["schemas"]
                 ],
