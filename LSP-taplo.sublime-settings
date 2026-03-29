@@ -21,7 +21,7 @@
 	// type of buffers to attach to
 	"schemes": ["file", "buffer", "res"],
 
-	"initializationOptions": {
+	"initialization_options": {
 		"configurationSection": "evenBetterToml",
 		"cachePath": "$server_path/cache",
 	},
