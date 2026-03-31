@@ -126,7 +126,7 @@ class TaploPlugin(AbstractPlugin):
         # ensure configured cache path exists, as taplo doesn't do that itself.
         variables = extract_variables(window)
         variables.update(cls.additional_variables())
-        cache_path = os.path.normpath(configuration.init_options.get("cachePath"))
+        cache_path = os.path.normpath(configuration.initialization_options.get("cachePath"))
         cache_path = str(sublime.expand_variables(cache_path, variables))
         os.makedirs(cache_path, exist_ok=True)
         return super().can_start(window, initiating_view, workspace_folders, configuration)
