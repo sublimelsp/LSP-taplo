@@ -8,7 +8,7 @@ See linked site for more information.
 
 ## Installation
 
-1. Install [LSP](https://packagecontrol.io/packages/LSP) and [LSP-taplo](https://packagecontrol.io/Packages/LSP-taplo) from Package Control.
+1. Install [LSP](https://packagecontrol.io/packages/LSP) and [LSP-taplo](https://packagecontrol.io/packages/LSP-taplo) from Package Control.
 2. Restart Sublime Text.
 
 > [!NOTE]
