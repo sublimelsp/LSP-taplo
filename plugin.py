@@ -1,15 +1,14 @@
 from __future__ import annotations
+
 import contextlib
 import gzip
 import json
 import os
 import time
-
 from functools import partial
-from urllib.request import urlopen, Request as HttpRequest
+from urllib.request import Request as HttpRequest, urlopen
 
 import sublime
-
 from LSP.plugin import (
     AbstractPlugin,
     ClientConfig,
@@ -22,9 +21,7 @@ from LSP.plugin import (
     unregister_plugin,
     uri_from_view,
 )
-from LSP.plugin.core.views import (
-    extract_variables,
-)
+from LSP.plugin.core.views import extract_variables
 
 __all__ = [
     "TaploAssignSchemaCommand",
