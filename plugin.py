@@ -10,18 +10,14 @@ from urllib.request import Request as HttpRequest, urlopen
 
 import sublime
 from LSP.plugin import (
-    AbstractPlugin,
-    ClientConfig,
+    LspPlugin,
     LspTextCommand,
     Notification,
+    OnPreStartContext,
     Request,
     Session,
-    WorkspaceFolder,
-    register_plugin,
-    unregister_plugin,
     uri_from_view,
 )
-from LSP.plugin.core.views import extract_variables
 
 __all__ = [
     "TaploAssignSchemaCommand",
@@ -34,7 +30,7 @@ __all__ = [
 ]
 
 
-class TaploPlugin(AbstractPlugin):
+class TaploPlugin(LspPlugin):
     package_name: str = __spec__.parent
     """
     The package name on file system.
@@ -49,25 +45,21 @@ class TaploPlugin(AbstractPlugin):
     The language server version to use.
     """
 
-    settings: sublime.Settings
-    """
-    Package settings
-    """
-
     # ---- public API methods ----
 
     @classmethod
-    def name(cls):
-        return "LSP-taplo"
+    def on_pre_start_async(cls, context: OnPreStartContext) -> None:
+        configuration = context.configuration
+        if cls.needs_update_or_installation(str(configuration.root_settings.get("server_version", "latest"))):
+            cls.install_or_update()
+        context.variables.update({"server_file": cls.server_file(), "server_path": cls.server_path()})
+        # ensure configured cache path exists, as taplo doesn't do that itself.
+        cache_path = os.path.normpath(configuration.initialization_options.get("cachePath"))
+        cache_path = str(sublime.expand_variables(cache_path, context.variables))
+        os.makedirs(cache_path, exist_ok=True)
 
     @classmethod
-    def configuration(cls):
-        settings_file_name = f"{cls.name()}.sublime-settings"
-        cls.settings = sublime.load_settings(settings_file_name)
-        return cls.settings, f"Packages/{cls.package_name}/{settings_file_name}"
-
-    @classmethod
-    def needs_update_or_installation(cls):
+    def needs_update_or_installation(cls, version: str):
         server_file = cls.server_file()
         is_upgrade = os.path.isfile(server_file)
         if is_upgrade:
@@ -75,7 +67,7 @@ class TaploPlugin(AbstractPlugin):
         else:
             next_update_check, server_version = 0, ""
 
-        cls.server_version = str(cls.settings.get("server_version", "latest"))
+        cls.server_version = version
         if cls.server_version == "latest":
             if int(time.time()) >= next_update_check:
                 try:
@@ -111,26 +103,6 @@ class TaploPlugin(AbstractPlugin):
 
         # write update cookie
         cls.save_metadata(True, cls.server_version)
-
-    @classmethod
-    def can_start(
-        cls,
-        window: sublime.Window,
-        initiating_view: sublime.View,
-        workspace_folders: list[WorkspaceFolder],
-        configuration: ClientConfig,
-    ) -> str | None:
-        # ensure configured cache path exists, as taplo doesn't do that itself.
-        variables = extract_variables(window)
-        variables.update(cls.additional_variables())
-        cache_path = os.path.normpath(configuration.initialization_options.get("cachePath"))
-        cache_path = str(sublime.expand_variables(cache_path, variables))
-        os.makedirs(cache_path, exist_ok=True)
-        return super().can_start(window, initiating_view, workspace_folders, configuration)
-
-    @classmethod
-    def additional_variables(cls) -> dict[str, str]:
-        return {"server_file": cls.server_file(), "server_path": cls.server_path()}
 
     # ---- internal methods -----
 
@@ -193,7 +165,7 @@ class TaploPlugin(AbstractPlugin):
 
     @classmethod
     def server_path(cls) -> str:
-        return os.path.join(cls.storage_path(), cls.package_name)
+        return str(cls.plugin_storage_path)
 
     @classmethod
     def metadata_file(cls) -> str:
@@ -229,7 +201,7 @@ class TaploAssignSchemaCommand(LspTextCommand):
     and presents them in a quick panel. Selected schema is assigned to open document.
     """
 
-    session_name = TaploPlugin.name()
+    session_name = TaploPlugin.name
 
     def run(self, _: sublime.Edit) -> None:
         session = self.session_by_name()
@@ -282,7 +254,7 @@ class TaploCopyAsJsonCommand(LspTextCommand):
     The command copies selected TOML content to clipboard as JSON.
     """
 
-    session_name = TaploPlugin.name()
+    session_name = TaploPlugin.name
 
     def run(self, _: sublime.Edit) -> None:
         text = ""
@@ -339,7 +311,7 @@ class TaploPasteAsJsonCommand(LspTextCommand):
     The command inserts TOML clipboard content at caret location(s) as JSON.
     """
 
-    session_name = TaploPlugin.name()
+    session_name = TaploPlugin.name
 
     def run(self, _: sublime.Edit) -> None:
         sublime.get_clipboard_async(callback=self.convert)
@@ -389,7 +361,7 @@ class TaploPasteAsTomlCommand(LspTextCommand):
     The command inserts JSON clipboard content at caret location(s) as TOML.
     """
 
-    session_name = TaploPlugin.name()
+    session_name = TaploPlugin.name
 
     def run(self, _: sublime.Edit) -> None:
         sublime.get_clipboard_async(callback=self.convert)
@@ -433,9 +405,9 @@ class TaploPasteAsTomlCommand(LspTextCommand):
 
 
 def plugin_loaded() -> None:
-    register_plugin(TaploPlugin)
+    TaploPlugin.register()
 
 
 def plugin_unloaded() -> None:
     TaploPlugin.cleanup()
-    unregister_plugin(TaploPlugin)
+    TaploPlugin.unregister()
