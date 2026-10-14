@@ -1,6 +1,6 @@
 {
 	// The command to start the langauge server.
-	"command": ["$server_file", "lsp", "stdio", "--colors", "never"],
+	"command": ["${server_file}", "lsp", "stdio", "--colors", "never"],
 
 	"env": {
 		// Logging configuration
@@ -23,7 +23,7 @@
 
 	"initialization_options": {
 		"configurationSection": "evenBetterToml",
-		"cachePath": "$server_path/cache",
+		"cachePath": "${server_path}/cache",
 	},
 
 	"settings": {
