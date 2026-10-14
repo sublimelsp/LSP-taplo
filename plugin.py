@@ -6,6 +6,8 @@ import json
 import os
 import time
 from functools import partial
+from shutil import rmtree
+from typing import ClassVar
 from urllib.request import Request as HttpRequest, urlopen
 
 import sublime
@@ -29,113 +31,107 @@ __all__ = [
     "plugin_unloaded",
 ]
 
+PACKAGE_NAME = str(__spec__.parent)
+
 
 class TaploPlugin(LspPlugin):
-    package_name: str = __spec__.parent
-    """
-    The package name on file system.
-
-    Main purpose is to provide python version acnostic package name for use
-    in path sensitive locations, to ensure plugin even works if user installs
-    package with different name.
-    """
-
-    server_version: str = ""
-    """
-    The language server version to use.
-    """
+    resolved_server_version: ClassVar[str] = ''
 
     # ---- public API methods ----
 
     @classmethod
     def on_pre_start_async(cls, context: OnPreStartContext) -> None:
         configuration = context.configuration
-        if cls.needs_update_or_installation(str(configuration.root_settings.get("server_version", "latest"))):
+
+        requested_server_version = str(configuration.root_settings.get("server_version", "latest"))
+        if cls.needs_update_or_installation(requested_server_version):
             cls.install_or_update()
-        context.variables.update({"server_file": cls.server_file(), "server_path": cls.server_path()})
+
+        context.variables.update({
+            "server_file": cls.server_binary_path(),
+            "server_path": cls.storage_path()
+        })
         # ensure configured cache path exists, as taplo doesn't do that itself.
         cache_path = os.path.normpath(configuration.initialization_options.get("cachePath"))
         cache_path = str(sublime.expand_variables(cache_path, context.variables))
         os.makedirs(cache_path, exist_ok=True)
 
     @classmethod
-    def needs_update_or_installation(cls, version: str):
-        server_file = cls.server_file()
-        is_upgrade = os.path.isfile(server_file)
+    def needs_update_or_installation(cls, requested_server_version: str) -> bool:
+        server_binary_path = cls.server_binary_path()
+        is_upgrade = os.path.isfile(server_binary_path)
         if is_upgrade:
-            next_update_check, server_version = cls.load_metadata()
+            next_update_check, installed_server_version = cls.load_metadata()
         else:
-            next_update_check, server_version = 0, ""
+            next_update_check, installed_server_version = 0, ""
 
-        cls.server_version = version
-        if cls.server_version == "latest":
+        cls.resolved_server_version = requested_server_version
+        if cls.resolved_server_version == "latest":
             if int(time.time()) >= next_update_check:
                 try:
                     available_version = cls.available_version()
-                    if available_version != server_version:
-                        cls.server_version = available_version
+                    if available_version != installed_server_version:
+                        cls.resolved_server_version = available_version
                         return True
                 except BaseException:
-                    cls.save_metadata(False, server_version)
+                    cls.save_metadata(False, installed_server_version)
 
             return False
 
-        return cls.server_version != server_version
+        return cls.resolved_server_version != installed_server_version
 
     @classmethod
-    def install_or_update(cls):
-        if not cls.server_version:
+    def install_or_update(cls) -> None:
+        if not cls.resolved_server_version:
             raise RuntimeError()
 
-        os.makedirs(cls.server_path(), exist_ok=True)
+        os.makedirs(cls.storage_path(), exist_ok=True)
 
         # streaming downlad and ungzip server binary
-        server_file = cls.server_file()
-        with contextlib.closing(urlopen(cls.download_url(cls.server_version))) as response:
-            with gzip.GzipFile(fileobj=response) as arc, open(server_file, "wb") as out:
+        server_binary_path = cls.server_binary_path()
+        with contextlib.closing(urlopen(cls.download_url(cls.resolved_server_version))) as response:
+            with gzip.GzipFile(fileobj=response) as arc, open(server_binary_path, "wb") as out:
                 while True:
                     block = arc.read(5 * 1024 * 1024)
                     if not block:
                         break
                     out.write(block)
 
-        os.chmod(server_file, 0o755)
+        os.chmod(server_binary_path, 0o755)
 
         # write update cookie
-        cls.save_metadata(True, cls.server_version)
+        cls.save_metadata(True, cls.resolved_server_version)
 
     # ---- internal methods -----
 
     @classmethod
-    def available_version(cls):
+    def available_version(cls) -> str:
         # response url ends with latest available version number
         request = HttpRequest(url=f"{cls.repo_url()}/releases/latest", method="HEAD")
         with contextlib.closing(urlopen(request)) as response:
             return response.url.rstrip("/").rsplit("/", 1)[1]
 
     @classmethod
-    def cleanup(cls):
+    def cleanup(cls) -> None:
         try:
             from package_control import events  # type: ignore
 
-            if events.remove(cls.package_name):
-                sublime.set_timeout_async(cls.remove_server_path, 1000)
+            if events.remove(PACKAGE_NAME):
+                sublime.set_timeout_async(cls.remove_storage_path, 1000)
         except ImportError:
             pass  # Package Control is not required.
 
     @classmethod
-    def remove_server_path(cls):
-        from shutil import rmtree
-
-        server_path = cls.server_path()
+    def remove_storage_path(cls):
+        storage_path = cls.storage_path()
         # Enable long path support on on Windows
         # to avoid errors when cleaning up paths with more than 256 chars.
         # see: https://stackoverflow.com/a/14076169/4643765
         # see: https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation
         if sublime.platform() == "windows":
-            server_path = Rf"\\?\{server_path}"
+            storage_path = Rf"\\?\{storage_path}"
 
-        rmtree(server_path, ignore_errors=True)
+        rmtree(storage_path, ignore_errors=True)
 
     @classmethod
     def repo_url(cls) -> str:
@@ -157,19 +153,19 @@ class TaploPlugin(LspPlugin):
         return f"{cls.repo_url()}/releases/download/{version}/{asset}"
 
     @classmethod
-    def server_file(cls) -> str:
-        name = os.path.join(cls.server_path(), "taplo")
+    def server_binary_path(cls) -> str:
+        name = os.path.join(cls.storage_path(), "taplo")
         if sublime.platform() == "windows":
             name += ".exe"
         return name
 
     @classmethod
-    def server_path(cls) -> str:
+    def storage_path(cls) -> str:
         return str(cls.plugin_storage_path)
 
     @classmethod
     def metadata_file(cls) -> str:
-        return os.path.join(cls.server_path(), "update.json")
+        return os.path.join(cls.storage_path(), "update.json")
 
     @classmethod
     def load_metadata(cls) -> tuple[int, str]:
@@ -200,8 +196,6 @@ class TaploAssignSchemaCommand(LspTextCommand):
     The command requests a list of available JSON schemas from taplo language server
     and presents them in a quick panel. Selected schema is assigned to open document.
     """
-
-    session_name = TaploPlugin.name
 
     def run(self, _: sublime.Edit) -> None:
         session = self.session_by_name()
@@ -253,8 +247,6 @@ class TaploCopyAsJsonCommand(LspTextCommand):
 
     The command copies selected TOML content to clipboard as JSON.
     """
-
-    session_name = TaploPlugin.name
 
     def run(self, _: sublime.Edit) -> None:
         text = ""
@@ -311,8 +303,6 @@ class TaploPasteAsJsonCommand(LspTextCommand):
     The command inserts TOML clipboard content at caret location(s) as JSON.
     """
 
-    session_name = TaploPlugin.name
-
     def run(self, _: sublime.Edit) -> None:
         sublime.get_clipboard_async(callback=self.convert)
 
@@ -360,8 +350,6 @@ class TaploPasteAsTomlCommand(LspTextCommand):
 
     The command inserts JSON clipboard content at caret location(s) as TOML.
     """
-
-    session_name = TaploPlugin.name
 
     def run(self, _: sublime.Edit) -> None:
         sublime.get_clipboard_async(callback=self.convert)
